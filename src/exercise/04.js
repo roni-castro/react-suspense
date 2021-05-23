@@ -31,13 +31,12 @@ const SUSPENSE_CONFIG = {
 
 const pokemonResourceCache = {}
 
-
-
-function getPokemonResource(pokemonName) {
-  let resource = pokemonResourceCache[pokemonName]
+function getPokemonResource(name) {
+  const lowerName = name.toLowerCase()
+  let resource = pokemonResourceCache[lowerName]
   if (!resource) {
-    resource = createPokemonResource(pokemonName)
-    pokemonResourceCache[pokemonName] = resource
+    resource = createPokemonResource(lowerName)
+    pokemonResourceCache[lowerName] = resource
   }
   return resource
 }

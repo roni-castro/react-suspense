@@ -29,16 +29,36 @@ const SUSPENSE_CONFIG = {
   busyMinDurationMs: 700,
 }
 
-const pokemonResourceCache = {}
+const PokemonResourceContext = React.createContext()
 
-function getPokemonResource(name) {
-  const lowerName = name.toLowerCase()
-  let resource = pokemonResourceCache[lowerName]
-  if (!resource) {
-    resource = createPokemonResource(lowerName)
-    pokemonResourceCache[lowerName] = resource
+function usePokemonResourceCache() {
+  const context = React.useContext(PokemonResourceContext)
+  if (!context) {
+    throw new Error(
+      'usePokemonResourceCache must used inside a component wrapped by PokemonResourceCacheProvider',
+    )
   }
-  return resource
+  return context
+}
+
+function PokemonResourceCacheProvider(props) {
+  const pokemonResourceCache = React.useRef({})
+
+  const getPokemonResource = React.useCallback(
+    name => {
+      const lowerName = name.toLowerCase()
+      let resource = pokemonResourceCache.current[lowerName]
+      if (!resource) {
+        resource = createPokemonResource(lowerName)
+        pokemonResourceCache.current[lowerName] = resource
+      }
+      return resource
+    },
+    [pokemonResourceCache],
+  )
+  return (
+    <PokemonResourceContext.Provider value={getPokemonResource} {...props} />
+  )
 }
 
 function createPokemonResource(pokemonName) {
@@ -49,6 +69,7 @@ function App() {
   const [pokemonName, setPokemonName] = React.useState('')
   const [startTransition, isPending] = React.useTransition(SUSPENSE_CONFIG)
   const [pokemonResource, setPokemonResource] = React.useState(null)
+  const getPokemonResource = usePokemonResourceCache()
 
   React.useEffect(() => {
     if (!pokemonName) {
@@ -58,7 +79,7 @@ function App() {
     startTransition(() => {
       setPokemonResource(getPokemonResource(pokemonName))
     })
-  }, [pokemonName, startTransition])
+  }, [pokemonName, startTransition, getPokemonResource])
 
   function handleSubmit(newPokemonName) {
     setPokemonName(newPokemonName)
@@ -92,4 +113,12 @@ function App() {
   )
 }
 
-export default App
+function AppWithProvider() {
+  return (
+    <PokemonResourceCacheProvider>
+      <App />
+    </PokemonResourceCacheProvider>
+  )
+}
+
+export default AppWithProvider

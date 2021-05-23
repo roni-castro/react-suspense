@@ -44,18 +44,15 @@ function usePokemonResourceCache() {
 function PokemonResourceCacheProvider(props) {
   const pokemonResourceCache = React.useRef({})
 
-  const getPokemonResource = React.useCallback(
-    name => {
-      const lowerName = name.toLowerCase()
-      let resource = pokemonResourceCache.current[lowerName]
-      if (!resource) {
-        resource = createPokemonResource(lowerName)
-        pokemonResourceCache.current[lowerName] = resource
-      }
-      return resource
-    },
-    [pokemonResourceCache],
-  )
+  const getPokemonResource = React.useCallback(name => {
+    const lowerName = name.toLowerCase()
+    let resource = pokemonResourceCache.current[lowerName]
+    if (!resource) {
+      resource = createPokemonResource(lowerName)
+      pokemonResourceCache.current[lowerName] = resource
+    }
+    return resource
+  }, [])
   return (
     <PokemonResourceContext.Provider value={getPokemonResource} {...props} />
   )

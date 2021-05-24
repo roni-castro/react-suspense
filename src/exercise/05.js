@@ -4,6 +4,7 @@
 import * as React from 'react'
 import {
   fetchPokemon,
+  getImageUrlForPokemon,
   PokemonInfoFallback,
   PokemonForm,
   PokemonDataView,
@@ -17,8 +18,6 @@ import {createResource} from '../utils'
 // approach to work!
 // ❗❗❗❗
 
-const imgSrcResourceCache = {}
-
 function preloadImage(src) {
   return new Promise(resolve => {
     const img = document.createElement('img')
@@ -27,21 +26,12 @@ function preloadImage(src) {
   })
 }
 
-function Img({src, alt, ...otherProps}) {
-  let imgSrcResource = imgSrcResourceCache[src]
-  if (!imgSrcResource) {
-    imgSrcResource = createResource(preloadImage(src))
-    imgSrcResourceCache[src] = imgSrcResource
-  }
-  return <img src={imgSrcResource.read()} alt={alt} {...otherProps} />
-}
-
 function PokemonInfo({pokemonResource}) {
-  const pokemon = pokemonResource.read()
+  const pokemon = pokemonResource.data.read()
   return (
     <div>
       <div className="pokemon-info__img-wrapper">
-        <Img src={pokemon.image} alt={pokemon.name} />
+        <img src={pokemonResource.image.read()} alt={pokemon.name} />
       </div>
       <PokemonDataView pokemon={pokemon} />
     </div>
@@ -67,7 +57,10 @@ function getPokemonResource(name) {
 }
 
 function createPokemonResource(pokemonName) {
-  return createResource(fetchPokemon(pokemonName))
+  const dataResource = createResource(fetchPokemon(pokemonName))
+  const imageUrl = getImageUrlForPokemon(pokemonName)
+  const imgSrcResource = createResource(preloadImage(imageUrl))
+  return {data: dataResource, image: imgSrcResource}
 }
 
 function App() {
